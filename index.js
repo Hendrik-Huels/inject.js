@@ -1102,7 +1102,7 @@
     }
   };
 
-  let version = "0.0.1";
+  let version = "0.0.3";
   let exit = false;
 
   const cMain = frames.main_frame.frames.main;

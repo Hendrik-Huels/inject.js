@@ -59,9 +59,12 @@
             <option style="font-size: 20px" value="easy" ${
               window.config.fight.mode === "easy" ? "selected" : ""
             }>easy</option>
-            <option style="font-size: 20px" value="Rach" ${
-              window.config.fight.mode === "Rach" ? "selected" : ""
-            }>Rach</option>
+            <option style="font-size: 20px" value="RachNormal" ${
+              window.config.fight.mode === "RachNormal" ? "selected" : ""
+            }>RachNormal</option>
+            <option style="font-size: 20px" value="RachFullBuffed" ${
+              window.config.fight.mode === "RachFullBuffed" ? "selected" : ""
+            }>RachFullBuffed</option>
             <option style="font-size: 20px" value="Schaiss" ${
               window.config.fight.mode === "Schaiss" ? "selected" : ""
             }>Schaiss</option>
@@ -240,8 +243,7 @@
     shadow.getElementById("pk-update").addEventListener("click", () => {
       window.pkquit();
       fetch(
-        "https://raw.githubusercontent.com/Hendrik-Huels/inject.js/main/webcomponent.js?" +
-          new Date().getTime(),
+        "https://raw.githubusercontent.com/Hendrik-Huels/inject.js/main/index.js",
         { cache: "no-store" }
       )
         .then((r) => r.text())
@@ -282,12 +284,13 @@
         Wisdom: { slot: [], cd: false },
         Atsha: { slot: [], cd: false },
         Rage: { slot: [], cd: false },
+        ScrollOfChange: { slot: [], cd: false },
       };
 
       Object.entries(hh_belt.items).forEach(([_, o_value]) => {
         for (const [key, value] of Object.entries(elixirSets)) {
           if (value.includes(o_value?.image))
-            hh_items[key].slot.push(o_value.slot);
+            hh_items[key].slot.push(o_value?.slot);
         }
         Object.entries(hh_belt.cd).forEach(([_, i_value]) => {
           if (o_value?.cdGroupId === i_value?.group) {
@@ -393,6 +396,7 @@
         enemyEffects: getEffects(true),
         myEffects: getEffects(false),
         mode: cMain.document?.game?.main?.view?.centerView?._mode,
+        opponentIsThere: cMain.document?.game?.main?.view?.oppNick.nick ? true : false,
       };
     };
 
@@ -850,14 +854,12 @@
           !("absoluteUnverwundbarkeit" in stat.fight.myEffects)
         ) {
           spell("d");
-          console.log("Activate unverwundbarkeit");
         }
         if (
           stat.fight.mode === "spells" &&
           "absoluteUnverwundbarkeit" in stat.fight.myEffects
         ) {
           changeModeToAttack();
-          console.log("Change to attack");
         }
         if (
           !("bow_crit" in stat.fight.enemyEffects) &&
@@ -928,6 +930,9 @@
         }
         break;
       default:
+        if (stat.fight.mode === "spells") {
+          changeModeToAttack();
+        }
         if ("racheDesRachdarischenZenturios" in stat.fight.myEffects) {
           if (!stat.fight.block) {
             toggleBlock();
@@ -951,21 +956,21 @@
     if (!stat.fight.aura && stat.mpCur > 140) {
       activateAura("t");
     }
-    if (stat.fight.totalDamage < 60000) {
+    if (stat.fight.totalDamage < 65000) {
       if (
         stat.fight.aura &&
         stat.mpCur > 70 &&
         stat.hpCur > 800 &&
-        "Nebel des Elends" in stat.fight.enemyEffects &&
-        stat.fight.enemyEffects[enemyEffects].time > 6
+        "ShaissarFilthFog" in stat.fight.enemyEffects &&
+        stat.fight.enemyEffects.ShaissarFilthFog > 6
       ) {
         attack(Number(stat.fight.combo.combo[stat.fight.combo.step]));
       }
     } else {
       if (
-        ("Nebel des Elends" in stat.fight.enemyEffects &&
-          stat.fight.enemyEffects[enemyEffects].time < 3) ||
-        !("Nebel des Elends" in enemyEffects)
+        ("ShaissarFilthFog" in stat.fight.enemyEffects &&
+          stat.fight.enemyEffects.ShaissarFilthFog < 2) ||
+        !("ShaissarFilthFog" in stat.fight.enemyEffects)
       ) {
         attack(Number(stat.fight.combo.combo[stat.fight.combo.step]));
       }
@@ -1047,15 +1052,27 @@
         ) {
           usePotion(stat.items.Mana.slot[0]);
         }
-        if (stat.fight.myTurn) {
+
+        // Custom debuff removals
+        if ("ShaissarDebuff" in stat.fight.myEffects && !("ScrollOfChange" in stat.fight.myEffects)){
+          usePotion(stat.items.ScrollOfChange.slot[0]);                                
+        }
+
+        if (stat.fight.myTurn && stat.fight.opponentIsThere) {
           switch (window.config.fight.mode) {
             case "easy":
               fightEasy();
               break;
-            case "Rach":
+            case "RachNormal":
+              window.config.fight.turn = 10;
               fightRach();
+              break;
+            case "RachFullBuffed":
+              fightRach();
+              break;
             case "Schaiss":
               fightSchaiss();
+              break;
           }
         }
     }
@@ -1123,6 +1140,9 @@
     Rage: [
       "e_tima_gnev.gif", // Dunkles Zornelixier
     ],
+    ScrollOfChange: [
+      "filth_mag_switch_01_gray.gif" // Gray
+    ]
   };
 
   const effectSets = {
@@ -1144,6 +1164,15 @@
     absoluteUnverwundbarkeit: [
       `${window.location.origin}/images/data/artifacts/absshield_all_3.gif`,
     ],
+    ShaissarDebuff: [
+      `${window.location.origin}/images/data/artifacts/zbers_baf3.gif`,
+    ],
+    ShaissarFilthFog: [
+      `${window.location.origin}/images/data/artifacts/56795_debaff.gif`,
+    ],
+    ScrollOfChange: [
+      `${window.location.origin}/images/data/artifacts/filth_mag_switch_01_gray.gif` // Gray
+    ]
   };
 
   if (!window.config) {

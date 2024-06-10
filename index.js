@@ -59,6 +59,9 @@
             <option style="font-size: 20px" value="easy" ${
               window.config.fight.mode === "easy" ? "selected" : ""
             }>easy</option>
+            <option style="font-size: 20px" value="mo" ${
+              window.config.fight.mode === "mo" ? "selected" : ""
+            }>mo</option>
             <option style="font-size: 20px" value="RachNormal" ${
               window.config.fight.mode === "RachNormal" ? "selected" : ""
             }>RachNormal</option>
@@ -119,6 +122,12 @@
       <span style="font-size: 20px">Use Effectsets: </span>
       <input id="pk-effecSet" type="checkbox" style="font-size: 20px; vertival-align: middle;" ${
         window.config.effectSet.enabled ? "checked" : ""
+      }>
+    </div>
+    <div>
+      <span style="font-size: 20px">Use Eating: </span>
+      <input id="pk-effecSet" type="checkbox" style="font-size: 20px; vertival-align: middle;" ${
+        window.config.eating.enabled ? "checked" : ""
       }>
     </div>
     <div>
@@ -823,6 +832,18 @@
     }
   };
 
+  const fightMo = () => {
+    if (stat.hpCur >= 550) {
+      attack(Number(stat.fight.combo.combo[stat.fight.combo.step]));
+    }
+    if (
+      (stat.items.Mana.slot.length === 0) ||
+      (stat.items.Life.slot.length === 0)
+    ) {
+      attack(Number(stat.fight.combo.combo[stat.fight.combo.step]));
+    }
+  };
+
   const fightEasy = () => {
     if (!stat.fight.aura && stat.mpCur > 140) {
       activateAura("t");
@@ -1060,6 +1081,9 @@
 
         if (stat.fight.myTurn && stat.fight.opponentIsThere) {
           switch (window.config.fight.mode) {
+            case "mo":
+              fightMo();
+              break;
             case "easy":
               fightEasy();
               break;
